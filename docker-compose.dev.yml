@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  ms-graph-db-main-server:
+    build:
+      dockerfile: './docker/db-server/db-server.dockerfile'
+      context: .
+    restart: always
+    image: cesbe/cesbe-db-main
+    container_name: ms-graph-db-main-server
+    ports:
+      - "54329:5432"
+    volumes:
+      - ./docker/db-server/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - ./docker/db-server/main-db-volume:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: cesbe_transmission
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    networks:
+      - rede-ms-graph
+
+  ms-graph-api-server:
+    build:
+      dockerfile: './docker/api-server/api-server-dev.dockerfile'
+      context: .
+    restart: always
+    image: cesbe/cesbe-api
+    container_name: ms-graph-api-server
+    ports:
+      - "8088:8088"
+      - "9229:9229" # Porta especifica para o NODE DEBUG DO VSCODE
+    volumes:
+      - ./api:/var/www/app
+      - /tmp:/tmp
+    entrypoint: ./entrypoint-dev.sh
+    networks:
+      - rede-ms-graph
+    depends_on:
+      - ms-graph-db-main-server
+      - ms-graph-db-test-server
+
+  ms-graph-app-client-server:
+    build:
+      dockerfile: './docker/app-client-server/app-client-server-dev.dockerfile'
+      context: .
+    restart: always
+    image: cesbe/cesbe-app-client
+    container_name: ms-graph-app-client-server
+    ports:
+      - "9088:9088"
+    volumes:
+      - ./app-client:/var/www/app
+    entrypoint: ./entrypoint-dev.sh
+    networks:
+      - rede-ms-graph
+    depends_on:
+      - ms-graph-api-server
+
+networks:
+  rede-ms-graph:
+    driver: bridge
