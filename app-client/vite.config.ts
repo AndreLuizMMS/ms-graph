@@ -10,9 +10,32 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
+  define: { 'process.env': {} },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
+    extensions: [
+      '.js',
+      '.json',
+      '.jsx',
+      '.mjs',
+      '.ts',
+      '.tsx',
+      '.vue'
+    ]
   },
+  css: {
+    preprocessorOptions: {
+      scss: {}
+    }
+  },
+  optimizeDeps: {
+    exclude: ['vuetify'],
+    entries: ['./src/**/*.vue']
+  },
+  server: {
+    host: true,
+    port: 9088
+  }
 })
